@@ -50,3 +50,17 @@ Packaged installer output lands in `release/` (e.g. `Zenith Setup 2.0.0.exe`).
 
 ## License
 MIT
+Zenith is a hand-drawn pixel cat desktop companion for Windows. It sits quietly
+on top of your other apps, keeps you company, and nudges you to stay healthy.
+
+• 3 cat breeds — Classic, Chonky, Sleek, each with its own shape & palette
+• Realistic idle animations — breathing, blinking, tail sway, ear twitches,
+  and it falls asleep with drifting "Zzz" after a while
+• Stretch / water / pomodoro reminders so you don't forget breaks
+• Follow-cursor mode that trails your pointer but never blocks a click
+  (turn it off from the cat itself, the tray, or Ctrl+Shift+F)
+• In-window gear menu (⚙) with every feature one click away
+• Pet it (hover) and drag it anywhere on your desktop
+• Color, pattern, name, timer — all customizable & persisted
+
+Built with Electron, TypeScript and Vite. Frameless, transparent, always-on-top.
