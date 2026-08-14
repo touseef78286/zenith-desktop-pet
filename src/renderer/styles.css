@@ -413,6 +413,22 @@ body {
   opacity: 0.3;
 }
 
+/* Follow mode = pure cat. Hide every UI element & force a clean transparent bg
+   so the user only ever sees the cat, never a button, timer, label or tint. */
+body.following {
+  background: transparent !important;
+}
+
+body.following #ui-overlay,
+body.following #menu-btn,
+body.following #follow-badge {
+  display: none !important;
+}
+
+body.following #cat-canvas {
+  opacity: 1;
+}
+
 .dragging #cat-canvas {
   cursor: grabbing;
 }
@@ -519,4 +535,89 @@ body {
 
 #zenith-menu .menu-quit .item-title {
   color: #c0392b;
+}
+
+#about-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fdfbf6;
+  color: #0a0a0a;
+  border: 1px solid #ece5d8;
+  border-radius: 8px;
+  padding: 8px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #f5a05a #fdfbf6;
+  box-shadow: 0 8px 24px rgba(10, 10, 10, 0.25);
+  z-index: 210;
+  pointer-events: auto;
+  animation: panelIn 0.16s var(--zenith-ease);
+  transform-origin: top left;
+}
+
+#about-panel h3 {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #fdfbf6;
+  padding: 2px 0 6px;
+  font-size: 13px;
+  font-weight: 800;
+  border-bottom: 1px solid #ece5d8;
+  margin-bottom: 8px;
+}
+
+#about-panel .about-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#about-panel .about-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #c05621;
+}
+
+#about-panel .about-version {
+  font-size: 10px;
+  font-weight: 700;
+  color: #a89f8c;
+  background: #f1ede4;
+  border-radius: 999px;
+  padding: 1px 7px;
+  margin-left: 4px;
+}
+
+#about-panel p {
+  font-size: 10px;
+  line-height: 1.45;
+  color: #4a463f;
+}
+
+#about-panel .about-links a {
+  color: #e07b2a;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+#about-panel .about-hint {
+  font-size: 9px;
+  color: #a89f8c;
+}
+
+#about-panel button {
+  width: 100%;
+  padding: 7px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  background: linear-gradient(135deg, #f5a05a, #f2913d);
+  color: #fff;
 }

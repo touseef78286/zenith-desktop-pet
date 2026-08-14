@@ -33,6 +33,7 @@ let time = 0;
 let settingsOpen = false;
 let pickerOpen = false;
 let menuOpen = false;
+let aboutOpen = false;
 let speechTimer: number | null = null;
 
 const pointer: PointerState = {
@@ -184,6 +185,7 @@ function updateIgnore(): void {
     !settingsOpen &&
     !pickerOpen &&
     !menuOpen &&
+    !aboutOpen &&
     !pointer.dragging &&
     !overFollowBadge(lastMouseRel.x, lastMouseRel.y) &&
     (settings.followCursor ||
@@ -302,9 +304,25 @@ function closeMenu(): void {
   updateIgnore();
 }
 
+function openAbout(): void {
+  if (menuOpen || settingsOpen || pickerOpen) return;
+  aboutOpen = true;
+  document.getElementById('about-panel')!.classList.remove('hidden');
+  applyUiMode();
+  updateIgnore();
+}
+
+function closeAbout(): void {
+  if (!aboutOpen) return;
+  aboutOpen = false;
+  document.getElementById('about-panel')!.classList.add('hidden');
+  applyUiMode();
+  updateIgnore();
+}
+
 // Keep the window size in sync with whichever panel is open.
 function applyUiMode(): void {
-  const mode: 'none' | 'menu' | 'settings' | 'picker' = menuOpen
+  const mode: 'none' | 'menu' | 'settings' | 'picker' = menuOpen || aboutOpen
     ? 'menu'
     : settingsOpen
       ? 'settings'
@@ -325,8 +343,25 @@ function setFollow(on: boolean): void {
   settings = { ...settings, followCursor: on };
   api.setSettings(settings);
   api.setFollow(on);
-  updateFollowBadge();
+  document.body.classList.toggle('following', on);
+  hideOverlayUI();
+  if (on) {
+    // Follow mode = pure cat. Close any open panel and shrink the window so the
+    // cat-only view never sits inside a big semi-transparent box.
+    if (settingsOpen) closeSettings();
+    if (pickerOpen) closePicker();
+    if (menuOpen) closeMenu();
+    if (aboutOpen) closeAbout();
+    applyUiMode();
+  }
   updateIgnore();
+}
+
+// In follow mode only the cat should be visible — no badge, timer, labels, toasts.
+function hideOverlayUI(): void {
+  if (!settings.followCursor) return;
+  const ids = ['pomodoro-timer', 'reminder-toast', 'name-label', 'fixed-message', 'speech-bubble', 'follow-badge'];
+  for (const id of ids) document.getElementById(id)?.classList.add('hidden');
 }
 
 function updateFollowBadge(): void {
@@ -372,10 +407,11 @@ function runMenuAction(action: string): void {
       break;
     case 'follow':
       toggleFollow();
+      closeMenu();
       break;
     case 'about':
-      showSpeech('Zenith · a pixel cat desktop pet', 2500);
       closeMenu();
+      openAbout();
       break;
     case 'quit':
       closeMenu();
@@ -390,6 +426,7 @@ async function init(): Promise<void> {
   renderer.setCat(settings.catId);
   api.setPeek(settings.peekWhenFullscreen);
   api.setFollow(settings.followCursor);
+  document.body.classList.toggle('following', settings.followCursor);
   updateFollowBadge();
 
   CAT_BREEDS.forEach((breed) => {
@@ -443,12 +480,16 @@ async function init(): Promise<void> {
     api.setSettings(settings);
     api.setPeek(settings.peekWhenFullscreen);
     api.setFollow(settings.followCursor);
+    document.body.classList.toggle('following', settings.followCursor);
     updateFollowBadge();
     renderer.setPattern(settings.pattern);
     renderer.setCat(settings.catId);
     closeSettings();
   });
   closeBtn?.addEventListener('click', () => closeSettings());
+
+  const closeAboutBtn = document.getElementById('close-about');
+  closeAboutBtn?.addEventListener('click', () => closeAbout());
 
   const menuBtn = document.getElementById('menu-btn');
   menuBtn?.addEventListener('click', (e) => {
@@ -501,6 +542,7 @@ async function init(): Promise<void> {
   window.addEventListener('keydown', (e) => {
     if (settingsOpen && e.key === 'Escape') closeSettings();
     else if (pickerOpen && e.key === 'Escape') closePicker();
+    else if (aboutOpen && e.key === 'Escape') closeAbout();
     else if (menuOpen && e.key === 'Escape') closeMenu();
   });
 

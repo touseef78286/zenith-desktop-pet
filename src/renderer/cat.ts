@@ -118,6 +118,8 @@ export class CatRenderer {
 
     this.drawCells(cells, palette, x0, yTop);
 
+    this.drawShading(cells, palette, x0, yTop);
+
     this.drawPattern(cells, palette, x0, yTop);
 
     this.drawEyes(out, palette, x0, yTop, cells);
@@ -138,15 +140,51 @@ export class CatRenderer {
     yTop: number,
   ): void {
     const ctx = this.ctx;
+    // Overlap each cell slightly so adjacent pixels melt together — this removes
+    // the harsh "dot matrix / dotted" grid seams and reads as soft fur.
+    const pad = 0.45;
+    const s = SCALE + pad * 2;
     for (let r = 0; r < cells.length; r++) {
       const row = cells[r];
       for (let c = 0; c < row.length; c++) {
         const ch = row[c];
         if (ch === '.') continue;
         ctx.fillStyle = palette[cellKey(ch)];
-        ctx.fillRect(x0 + c * SCALE, yTop + r * SCALE, SCALE, SCALE);
+        ctx.fillRect(x0 + c * SCALE - pad, yTop + r * SCALE - pad, s, s);
       }
     }
+  }
+
+  // Soft top-light + subtle shading clipped to the silhouette — kills the flat
+  // "painted squares" look and gives the cat a plush, dimensional feel.
+  private drawShading(
+    cells: string[],
+    palette: CatPalette,
+    x0: number,
+    yTop: number,
+  ): void {
+    const ctx = this.ctx;
+    const h = cells.length * SCALE;
+    ctx.save();
+    ctx.beginPath();
+    for (let r = 0; r < cells.length; r++) {
+      const row = cells[r];
+      for (let c = 0; c < row.length; c++) {
+        if (row[c] === '.') continue;
+        ctx.rect(x0 + c * SCALE, yTop + r * SCALE, SCALE, SCALE);
+      }
+    }
+    ctx.clip();
+
+    // Rosy top light on the head, fading down the body.
+    const g = ctx.createLinearGradient(x0, yTop, x0, yTop + h);
+    g.addColorStop(0, 'rgba(255,255,255,0.18)');
+    g.addColorStop(0.55, 'rgba(255,255,255,0)');
+    g.addColorStop(0.9, 'rgba(0,0,0,0.05)');
+    ctx.fillStyle = g;
+    ctx.fillRect(x0, yTop, SPRITE_W * SCALE, h);
+
+    ctx.restore();
   }
 
   private drawShadow(cx: number, feetY: number, w: number, squash: number): void {
@@ -154,7 +192,7 @@ export class CatRenderer {
     const halfW = w / 2 + 4;
     const rad = Math.max(halfW * (3 - squash), 3);
     const g = ctx.createRadialGradient(cx, feetY + 4, 1, cx, feetY + 4, rad);
-    g.addColorStop(0, 'rgba(10,10,10,0.22)');
+    g.addColorStop(0, 'rgba(10,10,10,0.18)');
     g.addColorStop(1, 'rgba(10,10,10,0)');
     ctx.fillStyle = g;
     ctx.beginPath();
@@ -162,8 +200,8 @@ export class CatRenderer {
     ctx.fill();
   }
 
-  // One-cell dark outline around the silhouette so the cat pops against any
-  // desktop background (kills the washed-out "boxed" look).
+  // Soft one-cell outline around the silhouette (all 8 neighbours) so the cat
+  // pops against any background with a smooth, non-boxed contour.
   private drawOutline(
     cells: string[],
     palette: CatPalette,
@@ -173,16 +211,18 @@ export class CatRenderer {
     const ctx = this.ctx;
     const outline = palette.furDark;
     ctx.save();
-    ctx.globalAlpha = 0.55;
+    ctx.globalAlpha = 0.35;
     for (let r = 0; r < cells.length; r++) {
       const row = cells[r];
       for (let c = 0; c < row.length; c++) {
         if (row[c] === '.') continue;
         ctx.fillStyle = outline;
-        ctx.fillRect(x0 + (c - 1) * SCALE, yTop + r * SCALE, SCALE, SCALE);
-        ctx.fillRect(x0 + (c + 1) * SCALE, yTop + r * SCALE, SCALE, SCALE);
-        ctx.fillRect(x0 + c * SCALE, yTop + (r - 1) * SCALE, SCALE, SCALE);
-        ctx.fillRect(x0 + c * SCALE, yTop + (r + 1) * SCALE, SCALE, SCALE);
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            if (dr === 0 && dc === 0) continue;
+            ctx.fillRect(x0 + (c + dc) * SCALE, yTop + (r + dr) * SCALE, SCALE, SCALE);
+          }
+        }
       }
     }
     ctx.restore();
