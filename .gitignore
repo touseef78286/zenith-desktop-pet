@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-electron/
+release/
+
+# AI memory brain (not part of the project source)
+AGENTS.md
+
+# Reference/scratch files
+comnyang-favicon.svg
+comnyang-logo.svg
+comnyang-site.html
+z-out.log
+z-err.log
+
+# Logs
+*.log
+
+# Electron / OS
+.DS_Store
+Thumbs.db

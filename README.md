@@ -1,0 +1,46 @@
+# Zenith — a pixel cat desktop companion
+
+A cozy desktop pet (in the spirit of Comnyang / Desktop Goose) that sits on top of
+your other apps. Electron + TypeScript + Vite. Hand-drawn pixel art, rendered into a
+small frameless, always-on-top, transparent window.
+
+## Features
+- **3 cat breeds** (Classic, Chonky, Sleek), each with its own shape and colors.
+- **Realistic idle animations**: breathing (~3.5 s), blinking (~4 s), tail sway (~4 s),
+  plus knead / hunt / stretch / overheat by typing.
+- **🐾 Click or hotkey (Ctrl+Shift+S)** to open the breed picker.
+- **⚙ Gear menu (top-left)** listing every action in sequence (Choose Cat, Settings,
+  Stretch, Water, Pomodoro, Peek, Follow cursor, About, Quit).
+- **🎯 Follow-cursor mode** — trail your pointer, or keep the cat parked in a corner.
+- **Reminders**: stretch, drink water, pomodoro focus timer, fixed message.
+- **Petting & dragging**: hover to pet, click-drag to move your cat.
+
+## Quick start
+```bash
+npm install
+npm run dev            # vite + electron
+npx tsc --noEmit       # typecheck
+npm run build          # typecheck + build + package (electron-builder)
+```
+Packaged installer output lands in `release/` (e.g. `Zenith Setup 1.0.0.exe`).
+
+## Controls
+| Action | How |
+| ------ | --- |
+| Open picker | Click the cat, or **Ctrl+Shift+S** |
+| Open menu | Click **⚙** (top-left) |
+| Follow cursor toggle | Tray **"Follow Cursor"**, **Ctrl+Shift+F** (fallback Ctrl+Alt+F), or the ⚙ menu |
+| Move cat | Click-drag the cat |
+| Pet | Hover over the cat |
+| Reminders | Tray menu / ⚙ menu |
+
+> In follow-cursor mode the window stays click-through, so use the tray or hotkey to
+> switch it back off.
+
+## Tech notes
+- Pixel grid is 30 columns wide, drawn with a 140×130 transparent window.
+- Settings persist to `userData/settings.json` (atomic write, validated on load/save).
+- Key hook (`uiohook-napi`) is filtered to typing-only keys to stay lightweight and safe.
+
+## License
+MIT

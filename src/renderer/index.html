@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws://localhost:* http://localhost:*; object-src 'none'; base-uri 'none';">
+  <title>Zenith</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="cat-canvas"></canvas>
+    <button id="menu-btn" title="Zenith menu" aria-label="Zenith menu">⚙</button>
+    <div id="zenith-menu" class="hidden">
+      <div class="menu-header">Zenith</div>
+      <button class="menu-item" data-action="cat">
+        <span class="item-title">Choose Cat…</span>
+        <span class="item-desc">Pick Classic, Chonky or Sleek</span>
+      </button>
+      <button class="menu-item" data-action="settings">
+        <span class="item-title">Settings…</span>
+        <span class="item-desc">Name, color, reminders, follow</span>
+      </button>
+      <button class="menu-item" data-action="stretch">
+        <span class="item-title">Stretch</span>
+        <span class="item-desc">Ask Zenith to stretch now</span>
+      </button>
+      <button class="menu-item" data-action="water">
+        <span class="item-title">Drink Water</span>
+        <span class="item-desc">Water break reminder</span>
+      </button>
+      <button class="menu-item" data-action="pomodoro">
+        <span class="item-title">Pomodoro</span>
+        <span class="item-desc">Restart focus timer</span>
+      </button>
+      <button class="menu-item" data-action="peek">
+        <span class="item-title">Peek</span>
+        <span class="item-desc">Show a peeky cat</span>
+      </button>
+      <button class="menu-item" data-action="follow">
+        <span class="item-title">Follow cursor <b class="menu-state" id="menu-follow-state">off</b></span>
+        <span class="item-desc">Cat trails your pointer</span>
+      </button>
+      <button class="menu-item" data-action="about">
+        <span class="item-title">About</span>
+        <span class="item-desc">What is Zenith?</span>
+      </button>
+      <button class="menu-item menu-quit" data-action="quit">
+        <span class="item-title">Quit</span>
+        <span class="item-desc">Close Zenith</span>
+      </button>
+    </div>
+    <div id="ui-overlay">
+      <div id="pomodoro-timer" class="hidden">25:00</div>
+      <div id="reminder-toast" class="hidden"></div>
+      <div id="name-label" class="hidden"></div>
+      <div id="fixed-message" class="hidden"></div>
+      <div id="speech-bubble" class="hidden"></div>
+    </div>
+    <div id="breed-picker" class="hidden">
+      <span class="picker-title">Pick your cat</span>
+      <div class="picker-row" id="picker-row">
+        <button class="picker-option" data-breed="classic">
+          <canvas class="picker-preview" data-breed="classic" width="60" height="48"></canvas>
+          <span class="picker-name">Classic</span>
+        </button>
+        <button class="picker-option" data-breed="chonky">
+          <canvas class="picker-preview" data-breed="chonky" width="60" height="48"></canvas>
+          <span class="picker-name">Chonky</span>
+        </button>
+        <button class="picker-option" data-breed="sleek">
+          <canvas class="picker-preview" data-breed="sleek" width="60" height="48"></canvas>
+          <span class="picker-name">Sleek</span>
+        </button>
+      </div>
+    </div>
+    <div id="settings-panel" class="hidden">
+      <h3>Settings</h3>
+      <label>Cat Name <input type="text" id="cat-name" maxlength="20"></label>
+      <label>Cat Breed
+        <select id="cat-breed">
+          <option value="classic">Classic</option>
+          <option value="chonky">Chonky</option>
+          <option value="sleek">Sleek</option>
+        </select>
+      </label>
+      <label>
+        <div class="inline-row">
+          <input type="checkbox" id="follow-cursor">
+          <span>Follow cursor</span>
+        </div>
+      </label>
+      <label>Primary Color <input type="color" id="cat-color"></label>
+      <label>Pattern
+        <select id="cat-pattern">
+          <option value="solid">Solid</option>
+          <option value="tabby">Tabby</option>
+          <option value="calico">Calico</option>
+          <option value="tuxedo">Tuxedo</option>
+        </select>
+      </label>
+      <label>Stretch Reminder (min) <input type="number" id="stretch-interval" min="1" max="120"></label>
+      <label>Water Reminder (min) <input type="number" id="water-interval" min="1" max="120"></label>
+      <label>Pomodoro
+        <div class="inline-row">
+          <input type="checkbox" id="pomodoro-enabled">
+          <span>Enabled</span>
+        </div>
+      </label>
+      <div class="two-col">
+        <label>Focus (min) <input type="number" id="pomodoro-min" min="1" max="120"></label>
+        <label>Break (min) <input type="number" id="pomodoro-break" min="1" max="60"></label>
+      </div>
+      <label>Fixed Message <input type="text" id="fixed-message-input" maxlength="60"></label>
+      <label>
+        <div class="inline-row">
+          <input type="checkbox" id="peek-toggle">
+          <span>Peek in fullscreen</span>
+        </div>
+      </label>
+      <button id="save-settings">Save</button>
+      <button id="close-settings">Close</button>
+      <p class="hint">Click-drag the cat to move it · Hover to pet</p>
+    </div>
+  </div>
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>

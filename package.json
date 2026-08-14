@@ -1,0 +1,51 @@
+{
+  "name": "zenith",
+  "version": "1.0.0",
+  "description": "Zenith - pixel cat desktop companion",
+  "author": "zenith",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc && vite build && electron-builder",
+    "build:dir": "tsc && vite build && electron-builder --dir",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "uiohook-napi": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0",
+    "vite-plugin-electron": "^0.28.0",
+    "vite-plugin-electron-renderer": "^0.14.0"
+  },
+  "build": {
+    "appId": "com.zenith.app",
+    "productName": "Zenith",
+    "directories": {
+      "output": "release"
+    },
+  "files": [
+    "dist-electron/**/*",
+    "dist/**/*",
+    "assets/**/*",
+    "node_modules/uiohook-napi/**/*"
+  ],
+  "asarUnpack": [
+    "node_modules/uiohook-napi/**/*"
+  ],
+  "win": {
+    "target": "nsis",
+    "icon": "assets/icon.png",
+    "signAndEditExecutable": false
+  },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
