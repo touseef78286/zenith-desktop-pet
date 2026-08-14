@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { uIOhook, UiohookKey, type UiohookKeyboardEvent } from 'uiohook-napi';
 import type { Settings } from '../src/renderer/types';
+import { WIN_W, WIN_H, MENU_W, MENU_H } from '../src/renderer/types';
 
 const DEFAULT_SETTINGS: Settings = {
   name: 'Zenith',
@@ -349,9 +350,25 @@ ipcMain.on('set-menu-open', (_event, on: unknown) => {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   const open = on === true;
   const [x, y] = mainWindow.getPosition();
-  const W = open ? 190 : 140;
-  const H = open ? 250 : 130;
+  const W = open ? MENU_W : WIN_W;
+  const H = open ? MENU_H : WIN_H;
   mainWindow.setBounds({ x, y, width: W, height: H }, false);
+  mainWindow.webContents.send('window-size', { width: W, height: H });
+});
+
+ipcMain.on('set-ui-mode', (_event, mode: unknown) => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  const open =
+    mode === 'menu' || mode === 'settings' || mode === 'picker';
+  const [x, y] = mainWindow.getPosition();
+  const W = open ? MENU_W : WIN_W;
+  const H = open ? MENU_H : WIN_H;
+  const current = mainWindow.getBounds();
+  if (current.width !== W || current.height !== H) {
+    mainWindow.setBounds({ x, y, width: W, height: H }, false);
+  }
+  mainWindow.setMinimumSize(WIN_W, WIN_H);
+  mainWindow.setMaximumSize(MENU_W, MENU_H);
   mainWindow.webContents.send('window-size', { width: W, height: H });
 });
 

@@ -41,7 +41,8 @@ export type PoseId =
   | 'peek'
   | 'paper'
   | 'think'
-  | 'jump';
+  | 'jump'
+  | 'ear';
 
 export interface PoseDef {
   frames: SpriteFrame[];
@@ -160,8 +161,14 @@ export const DEFAULT_SETTINGS: Settings = {
   peekWhenFullscreen: true,
 };
 
-export const SCALE = 4; // pixels per sprite cell
+// Central layout constants — single source of truth.
+// cat.ts, main.ts, sprites.ts and the window sizing logic all derive from here.
+export const SCALE = 3; // pixels per sprite cell
 export const SPRITE_W = 30; // sprite grid width (cols)
 export const SPRITE_H = 24; // sprite grid height (rows)
-export const WIN_W = 140;
-export const WIN_H = 130;
+export const WIN_W = 140; // compact window width when no panel is open
+export const WIN_H = 130; // compact window height when no panel is open
+export const MENU_W = 190; // expanded window width while a panel (menu/settings/picker) is open
+export const MENU_H = 250; // expanded window height while a panel is open
+export const ANCHOR_X = WIN_W / 2; // cat baseline center (px from left)
+export const ANCHOR_BOTTOM = 118; // cat feet baseline (px from top)

@@ -10,7 +10,14 @@ const api = {
   setPeek: (on: boolean): void => ipcRenderer.send('set-peek', on),
   setFollow: (on: boolean): void => ipcRenderer.send('set-follow', on),
   setMenuOpen: (on: boolean): void => ipcRenderer.send('set-menu-open', on),
+  setUiMode: (mode: 'none' | 'menu' | 'settings' | 'picker'): void =>
+    ipcRenderer.send('set-ui-mode', mode),
   quitApp: (): void => ipcRenderer.send('app-quit'),
+  onWindowSize: (cb: (size: { width: number; height: number }) => void): (() => void) => {
+    const listener = (_e: unknown, size: { width: number; height: number }) => cb(size);
+    ipcRenderer.on('window-size', listener);
+    return () => ipcRenderer.off('window-size', listener);
+  },
   onMouseMove: (cb: (pos: { x: number; y: number }) => void): (() => void) => {
     const listener = (_e: unknown, pos: { x: number; y: number }) => cb(pos);
     ipcRenderer.on('mouse-move', listener);

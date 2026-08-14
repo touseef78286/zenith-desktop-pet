@@ -157,12 +157,56 @@ function raiseTailTip(frame: SpriteFrame): SpriteFrame {
   return next.map((row) => row.join(''));
 }
 
-// Build the full 14-pose set for a given base breed shape.
+// Build the full pose set for a given base breed shape.
 function buildSpriteSet(base: SpriteFrame): SpriteSet {
   const withEyesClosed = (f: SpriteFrame) =>
     mapChar(f, (c) => (c === 'O' || c === 'W' ? 'F' : c));
 
   const headOnly = base.slice(0, 8);
+
+  // Ear-twitch: briefly flash the left ear tip to inner-ear pink so it reads as a
+  // fast ear flick (reference ~9–13s apart). Safe for every breed (tips sit on row 0).
+  const twitchLeftEar = (f: SpriteFrame): SpriteFrame => {
+    let tipRow = -1;
+    let tipCols: number[] = [];
+    outer: for (let r = 0; r < f.length; r++) {
+      for (let c = 0; c < 13; c++) {
+        const ch = f[r][c];
+        if (ch === 'D') {
+          tipRow = r;
+          tipCols = [];
+          for (let cc = 0; cc < 13; cc++) {
+            if (f[r][cc] === 'D') tipCols.push(cc);
+          }
+          break outer;
+        }
+      }
+    }
+    if (tipRow < 0) return f;
+    const arr = f.map((row) => row.split(''));
+    for (const c of tipCols) {
+      if (arr[tipRow][c] === 'D') arr[tipRow][c] = 'E';
+    }
+    return arr.map((row) => row.join(''));
+  };
+
+  // Sleep Zzz: closed eyes + 2 drifting "Z" bubbles near the head.
+  const sleepZ = (step: number): SpriteFrame => {
+    const closed = withEyesClosed(base);
+    const arr = closed.map((row) => row.split(''));
+    const zz = [
+      { x: 24, y: 1 },
+      { x: 25, y: 0 },
+      { x: 26, y: -1 },
+    ];
+    for (let i = 0; i < 2; i++) {
+      const p = zz[(step + i) % zz.length];
+      if (p.y >= 0 && p.y < arr.length && p.x >= 0 && p.x < SPRITE_W) {
+        arr[p.y][p.x] = 'B';
+      }
+    }
+    return arr.map((row) => row.join(''));
+  };
 
   const stretchBody: SpriteFrame = [
     ...base.slice(0, 18),
@@ -208,12 +252,13 @@ function buildSpriteSet(base: SpriteFrame): SpriteSet {
     knead: pose([kneadUp, kneadDown], 6, true),
     overheat: pose([steamOver], 2, true),
     drag: pose([base], 2, true),
-    sleep: pose([withEyesClosed(base)], 1, true),
+    sleep: pose([sleepZ(0), sleepZ(1), sleepZ(2), sleepZ(1)], 0.8, true),
     happy: pose([happyFrame], 2, false),
     peek: pose([headOnly], 2, true),
     paper: pose([paperFrames], 2, false),
     think: pose([thinkFrame], 1, true),
     jump: pose([happyFrame], 4, false),
+    ear: pose([twitchLeftEar(base), base], 6, true),
   };
 }
 

@@ -5,7 +5,7 @@ import { createReminderSystem } from './reminders';
 import { makePalette } from './palette';
 import { validateSprites, CATS, CAT_BREEDS, SPRITE_W, cellKey } from './sprites';
 import type { BehaviorOutput, KeyEventData, PointerState, Settings } from './types';
-import { DEFAULT_SETTINGS } from './types';
+import { DEFAULT_SETTINGS, ANCHOR_X, ANCHOR_BOTTOM, SCALE, SPRITE_H } from './types';
 import type { ElectronAPI } from '../../electron/preload';
 
 declare global {
@@ -104,10 +104,13 @@ function makeSound() {
 const sound = makeSound();
 
 function overCat(x: number, y: number): boolean {
-  const cx = 70;
-  const cy = 82;
-  const rx = 45;
-  const ry = 38;
+  // Derive the cat hit-zone from the shared layout constants (no magic numbers).
+  const halfW = (SPRITE_W * SCALE) / 2;
+  const h = SPRITE_H * SCALE;
+  const cx = ANCHOR_X;
+  const cy = ANCHOR_BOTTOM - h / 2;
+  const rx = halfW + 8;
+  const ry = h / 2 + 4;
   const nx = (x - cx) / rx;
   const ny = (y - cy) / ry;
   return nx * nx + ny * ny <= 1;
@@ -141,12 +144,14 @@ function openPicker(): void {
   const el = document.getElementById('breed-picker');
   el?.classList.remove('hidden');
   updatePickerSelection();
+  applyUiMode();
   updateIgnore();
 }
 
 function closePicker(): void {
   pickerOpen = false;
   document.getElementById('breed-picker')?.classList.add('hidden');
+  applyUiMode();
   updateIgnore();
 }
 
@@ -173,13 +178,14 @@ let lastIgnore: boolean | null = null;
 
 function updateIgnore(): void {
   // UI open => must be clickable. Otherwise, while following the cursor the
-  // cat is decorative and must never block clicks; at rest only block over the
-  // cat (or the gear button).
+  // cat is decorative and must never block clicks — but the FOLLOW badge stays
+  // clickable so follow mode can always be switched off from the window itself.
   const ignore =
     !settingsOpen &&
     !pickerOpen &&
     !menuOpen &&
     !pointer.dragging &&
+    !overFollowBadge(lastMouseRel.x, lastMouseRel.y) &&
     (settings.followCursor ||
       (!overCat(lastMouseRel.x, lastMouseRel.y) && !overGear(lastMouseRel.x, lastMouseRel.y)));
   if (ignore !== lastIgnore) {
@@ -267,12 +273,14 @@ function openSettings(): void {
   buildSettingsUI();
   settingsOpen = true;
   document.getElementById('settings-panel')!.classList.remove('hidden');
+  applyUiMode();
   updateIgnore();
 }
 
 function closeSettings(): void {
   settingsOpen = false;
   document.getElementById('settings-panel')!.classList.add('hidden');
+  applyUiMode();
   updateIgnore();
 }
 
@@ -282,7 +290,7 @@ function openMenu(): void {
   const state = document.getElementById('menu-follow-state');
   if (state) state.textContent = settings.followCursor ? 'on' : 'off';
   document.getElementById('zenith-menu')!.classList.remove('hidden');
-  api.setMenuOpen(true);
+  applyUiMode();
   updateIgnore();
 }
 
@@ -290,8 +298,20 @@ function closeMenu(): void {
   if (!menuOpen) return;
   menuOpen = false;
   document.getElementById('zenith-menu')!.classList.add('hidden');
-  api.setMenuOpen(false);
+  applyUiMode();
   updateIgnore();
+}
+
+// Keep the window size in sync with whichever panel is open.
+function applyUiMode(): void {
+  const mode: 'none' | 'menu' | 'settings' | 'picker' = menuOpen
+    ? 'menu'
+    : settingsOpen
+      ? 'settings'
+      : pickerOpen
+        ? 'picker'
+        : 'none';
+  api.setUiMode(mode);
 }
 
 function toggleFollow(): void {
@@ -305,7 +325,23 @@ function setFollow(on: boolean): void {
   settings = { ...settings, followCursor: on };
   api.setSettings(settings);
   api.setFollow(on);
+  updateFollowBadge();
   updateIgnore();
+}
+
+function updateFollowBadge(): void {
+  const badge = document.getElementById('follow-badge');
+  if (!badge) return;
+  badge.classList.toggle('hidden', !settings.followCursor);
+}
+
+// While following, the window is pass-through except over the badge — that's the
+// guaranteed in-window escape hatch (plus tray checkbox + Ctrl+Shift+F hotkey).
+function overFollowBadge(x: number, y: number): boolean {
+  const badge = document.getElementById('follow-badge');
+  if (!badge || badge.classList.contains('hidden')) return false;
+  const r = badge.getBoundingClientRect();
+  return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
 }
 
 function runMenuAction(action: string): void {
@@ -354,6 +390,7 @@ async function init(): Promise<void> {
   renderer.setCat(settings.catId);
   api.setPeek(settings.peekWhenFullscreen);
   api.setFollow(settings.followCursor);
+  updateFollowBadge();
 
   CAT_BREEDS.forEach((breed) => {
     const cv = document.querySelector<HTMLCanvasElement>(`.picker-preview[data-breed="${breed.id}"]`);
@@ -372,6 +409,14 @@ async function init(): Promise<void> {
 
   api.onMouseMove((pos) => {
     lastMouseRel = pos;
+  });
+
+  api.onWindowSize(({ width, height }) => {
+    // Grow/shrink the document so panels (menu/settings/picker) fill the whole
+    // window instead of a fixed 140×130 box.
+    document.body.style.width = `${width}px`;
+    document.body.style.height = `${height}px`;
+    applyUiMode();
   });
 
   api.onKeyEvent((e) => {
@@ -398,6 +443,7 @@ async function init(): Promise<void> {
     api.setSettings(settings);
     api.setPeek(settings.peekWhenFullscreen);
     api.setFollow(settings.followCursor);
+    updateFollowBadge();
     renderer.setPattern(settings.pattern);
     renderer.setCat(settings.catId);
     closeSettings();
@@ -409,6 +455,12 @@ async function init(): Promise<void> {
     e.stopPropagation();
     if (menuOpen) closeMenu();
     else openMenu();
+  });
+
+  const followBadge = document.getElementById('follow-badge');
+  followBadge?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleFollow();
   });
 
   document.querySelectorAll<HTMLButtonElement>('#zenith-menu .menu-item').forEach((btn) => {

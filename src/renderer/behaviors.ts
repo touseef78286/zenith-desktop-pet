@@ -21,6 +21,10 @@ const HUNT_DURATION = 0.6;
 const BLINK_DURATION = 0.15;
 const BLINK_MIN = 3;
 const BLINK_MAX = 5;
+const EAR_TWITCH_MIN = 9;
+const EAR_TWITCH_MAX = 13;
+const EAR_TWITCH_DURATION = 0.18;
+const SLEEP_AFTER_S = 40;
 const BREATH_FREQ = (2 * Math.PI) / 3.5; // ~3.5s breathe cycle (reference)
 const EYE_LERP = 8;
 const EYE_LIMIT = 5;
@@ -62,6 +66,9 @@ export class BehaviorManager {
   private overheat = 0;
   private blinkAt = BLINK_MIN + Math.random() * (BLINK_MAX - BLINK_MIN);
   private blinkT = 0;
+  private earAt = EAR_TWITCH_MIN + Math.random() * (EAR_TWITCH_MAX - EAR_TWITCH_MIN);
+  private earT = 0;
+  private lastInteract = -Infinity;
 
   private eyeOffsetX = 0;
   private eyeOffsetY = 0;
@@ -127,6 +134,8 @@ export class BehaviorManager {
     const typing = this.recentTyping();
     this.updateOverheat(dt, typing);
 
+    if (typing || pointer.dragging || pointer.petting || pointer.overCat) this.lastInteract = this.time;
+
     if (input.mouse !== null) this.updateEyes(dt, input.mouse);
     this.updateHunt(dt, input.mouse);
 
@@ -134,6 +143,7 @@ export class BehaviorManager {
     this.updateDrag(pointer, mouse);
     this.updatePet(dt, pointer);
     this.updateBlink(dt);
+    this.updateEar(dt);
 
     if (this.happySeq > 0) this.happySeq = Math.max(0, this.happySeq - dt);
 
@@ -332,6 +342,18 @@ export class BehaviorManager {
     }
   }
 
+  // Occasional ear flick (reference ~11s / 13s apart).
+  private updateEar(dt: number): void {
+    if (this.earT > 0) {
+      this.earT -= dt;
+      return;
+    }
+    if (this.time >= this.earAt) {
+      this.earT = EAR_TWITCH_DURATION;
+      this.earAt = this.time + EAR_TWITCH_MIN + Math.random() * (EAR_TWITCH_MAX - EAR_TWITCH_MIN);
+    }
+  }
+
   private updateReminder(rem: string | null): void {
     if (rem !== this.lastReminder) {
       if (rem !== null) this.activateReminder(rem);
@@ -370,7 +392,9 @@ export class BehaviorManager {
     if (this.lastReminder === 'think') return 'think';
     if (this.happySeq > 0) return this.happySeq > HAPPY_PHASE ? 'happy' : 'jump';
     if (typing) return 'knead';
+    if (this.time - this.lastInteract > SLEEP_AFTER_S) return 'sleep';
     if (this.blinkT > 0) return 'blink';
+    if (this.earT > 0) return 'ear';
     return 'idle';
   }
 
