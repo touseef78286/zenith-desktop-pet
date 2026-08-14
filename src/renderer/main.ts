@@ -457,6 +457,12 @@ async function init(): Promise<void> {
   });
 
   api.onKeyEvent((e) => {
+    // Global Escape from the key hook: leave follow mode and go back to normal.
+    if (e.key === 'Escape' && e.type === 'keydown' && settings.followCursor) {
+      setFollow(false);
+      const state = document.getElementById('menu-follow-state');
+      if (state) state.textContent = 'off';
+    }
     keyQueue.push(e);
     if (keyQueue.length > 512) keyQueue.shift();
   });
